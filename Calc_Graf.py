@@ -1,18 +1,14 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 import wx
 import wx.lib.scrolledpanel
 import numpy as np
 import matplotlib
+import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wx import NavigationToolbar2Wx
 import os.path
 from os import path
+import time
 
 
 class Inicio(wx.Frame):
@@ -69,11 +65,11 @@ class Inicio(wx.Frame):
 class Graficadora(wx.Frame):
 
     def __init__(self):
-        w, h = wx.GetDisplaySize()
+        self.w, self.h = wx.GetDisplaySize()
         #self.operadores_unarios = ['sqrt', 'exp', 'log', 'cos', 'sin', 'tan', 'cosh', 'sinh', 'tanh']
         self.operadores_unarios, self.operadores_binarios, self.operadores_problematicos = leer_funciones()
         self.rango_x = (-1, 1)
-        super().__init__(parent=None, title='Graficadora', size = (int(w/2), int(3*h/4)))
+        super().__init__(parent=None, title='Graficadora', size = (int(self.w/2), int(3*self.h/4)))
         panel = wx.Panel(self)
         box = wx.BoxSizer(wx.VERTICAL)
 
@@ -138,7 +134,7 @@ class Graficadora(wx.Frame):
 
         ## WIDGETS PARA LA ENTRADA
         box1_1 = wx.BoxSizer(wx.HORIZONTAL)
-        self.entrada = wx.TextCtrl(panel, size = (int(w/6), 10*4))
+        self.entrada = wx.TextCtrl(panel, size = (int(self.w/6), 10*4))
         string1 = wx.StaticText(panel, label = "Entrada: ")
         box1_1.Add(string1, 0, wx.LEFT | wx.CENTER, 5)
         box1_1.Add(self.entrada, 0, wx.ALL | wx.EXPAND, 5)
@@ -158,12 +154,12 @@ class Graficadora(wx.Frame):
         ## BOX AUXILIAR PARA LAS ENTRADAS DE LOS RANGOS
         box2_1 = wx.BoxSizer(wx.HORIZONTAL)
         ## WIDGETS PARA EL RANGO EN X
-        self.entrada_rango_x = wx.TextCtrl(panel, size = (int(w/22), 10*4))
+        self.entrada_rango_x = wx.TextCtrl(panel, size = (int(self.w/22), 10*4))
         string2 = wx.StaticText(panel, label = "Rango en x: ")
         box2_1.Add(string2, 0, wx.LEFT | wx.CENTER, 5)
         box2_1.Add(self.entrada_rango_x, 0, wx.ALL | wx.EXPAND, 5)
         ## WIDGETS PARA EL RANGO EN Y
-        self.entrada_rango_y = wx.TextCtrl(panel, size = (int(w/22), 10*4))
+        self.entrada_rango_y = wx.TextCtrl(panel, size = (int(self.w/22), 10*4))
         string3 = wx.StaticText(panel, label = "Rango en y: ")
         box2_1.Add(string3, 0, wx.LEFT | wx.CENTER, 5)
         box2_1.Add(self. entrada_rango_y, 0, wx.ALL | wx.EXPAND, 5)
@@ -194,11 +190,12 @@ class Graficadora(wx.Frame):
         box.Add(box_entradas)
 
         ## PARTE DE LA GRÁFICA
-        self.figure = Figure()
-        self.axes = self.figure.add_subplot(111)
+        #self.figure = Figure(figsize=(int(4*self.w/800), int(self.h/200)))
+        #self.axes = self.figure.add_subplot()
+        self.figure, self.axes = plt.subplots(figsize = (int(4*self.w/800), int(3*self.h/(8.7*80))), tight_layout=True )
         self.axes.set_xlim(self.rango_x)
         self.axes.grid()
-        self.figure.set_figwidth(9)
+        #self.figure.setfigsize(9)
         self.canvas = FigureCanvas(panel, -1, self.figure)
         box_grafica = wx.BoxSizer(wx.VERTICAL)
 
@@ -236,10 +233,11 @@ class Graficadora(wx.Frame):
         run_graf()
 
     def nueva_func(self, event):
-        callPopup_input('agregar')
+        callPopup_input('agregar', 'graf')
+        self.Close()
 
     def quitar_func(self, event):
-        callPopup_input('eliminar')
+        callPopup_input('eliminar', 'graf')
 
     def ver_func(self, event):
         callFunciones("Graf")
@@ -516,10 +514,12 @@ class Calculadora(wx.Frame):
         run_calc()
 
     def nueva_func(self, event):
-        callPopup_input('agregar')
+        callPopup_input('agregar', 'calc')
+        self.Close()
 
     def quitar_func(self, event):
-        callPopup_input('eliminar')
+        callPopup_input('eliminar', 'calc')
+        self.Close()
 
     def ver_func(self, event):
         callFunciones("Calc")
@@ -665,8 +665,9 @@ class Popup(wx.Frame):
 
 ## INICIO DE LA CLASE POPUP CON ENTRADA
 class Popup_input(wx.Frame):
-    def __init__(self, accion):
+    def __init__(self, accion, clase):
         self.accion = accion
+        self.clase = clase
         super().__init__(parent=None, title='Mensaje', size = (300, 200))
         panel = wx.Panel(self)
         box = wx.BoxSizer(wx.VERTICAL)
@@ -699,8 +700,18 @@ class Popup_input(wx.Frame):
             eliminar_unaria(actual)
         self.Close()
 
+        if self.clase == "calc":
+            run_calc()
+        elif self.clase == "graf":
+            run_graf()
+
     def Cancelar(self, event):
         self.Close()
+
+        if self.clase == "calc":
+            run_calc()
+        elif self.clase == "graf":
+            run_graf()
 
 ## FIN DE LA CLASE POPUP CON ENTRADA
 
@@ -765,8 +776,9 @@ def callPopup(mensaje):
     frame = Popup(mensaje)
 
 ## FUNCION PARA LLAMAR A UN POPUP CON ENTRADA
-def callPopup_input(accion):
-    frame = Popup_input(accion)
+def callPopup_input(accion, clase):
+    frame = Popup_input(accion, clase)
+
 
 ## FUNCION PARA LEER DE UN ARCHIVO LAS FUNCIONES EXISTENTES
 def leer_funciones():
@@ -862,6 +874,3 @@ def main():
         app.MainLoop()
     except:
         print("El programa ha finalizado")
-
-
-main()
